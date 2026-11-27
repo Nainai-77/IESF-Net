@@ -1,0 +1,36 @@
+# Experiment suites -> paper tables.  Each entry names a variant registered in
+# iesf/experiments/registry.py.  Variants inherit the IESF-Net hyperparameters
+# (configs/iesf_net.yaml, or the tuned JSON when present) so that controlled
+# comparisons change only the named mechanism; set tune_each_variant: true to
+# run the full Table A4 protocol separately for every variant.
+# `markets` is primary | secondary | all, or an explicit list.
+
+tune_each_variant: false
+
+suites:
+  main:            # Table 7 (multiscale rows), Tables 9-10 (controls), Table 16 (primary markets)
+    markets: primary
+    variants: [Numeric, IESF-Net, Bidirectional]
+    repeat_seeds: true          # independent runs for the three core models
+  representation:  # Table 12 / Figure 11(a)
+    markets: primary
+    variants: [Numeric, Rep-NewsCount, Rep-Lexical, Rep-Semantic, Rep-SemCSI, Rep-PIIAttr, Rep-PIIMemory]
+  fusion:          # Table 13 / Figure 11(b); also the controls of Tables 9-10
+    markets: primary
+    variants: [Fusion-Static, Fusion-Gated, Fusion-Num2Text, Fusion-Text2Num, Bidirectional,
+               Fusion-FeatureCond, Fusion-MatchingCond, IESF-Net]
+  ablation:        # Table 14 / Figure 12(a)
+    markets: primary
+    variants: [Abl-NoMemory, Abl-NoRouter, Abl-SharedEncoder, Abl-NoText-S1, Abl-NoText-S2, Abl-NoText-S3]
+  window:          # Table 15 / Figure 12(b)
+    markets: primary
+    variants: [Win-Uniform10, Win-Uniform30, Win-Uniform60, Win-Uniform90, IESF-Net]
+  cross_market:    # Table 16 / Figure 13
+    markets: secondary
+    variants: [Numeric, IESF-Net]
+
+# Families used by the paired statistics (Section 3.6.6)
+families:
+  controls: [Numeric, Fusion-Static, Fusion-Gated, Fusion-Num2Text, Fusion-Text2Num,
+             Bidirectional, Fusion-FeatureCond, Fusion-MatchingCond]
+  benchmarks: [Persistence, ARIMA, Ridge, XGBoost, LSTM, TCN, Transformer, PatchTST, iTransformer]

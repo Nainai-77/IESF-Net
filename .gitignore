@@ -1,0 +1,53 @@
+# Private datasets, generated artifacts, and local audit evidence
+/data/
+/data_smoke/
+/decomposition/
+/logs/
+/outputs/
+/outputs_smoke/
+/reference/
+/evidence/
+/checkpoints/
+/rebuild/
+# Default-deny common data and result files
+*.csv
+*.tsv
+*.jsonl
+*.json
+*.xlsx
+*.xls
+*.parquet
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.log
+*.err
+*.pid
+*.rar
+*.zip
+*.7z
+*.tar
+*.gz
+# Python, IDE and environment
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+.env.*
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local dependency and evidence directories
+/.deps/
+/diagnostics/
+/release/

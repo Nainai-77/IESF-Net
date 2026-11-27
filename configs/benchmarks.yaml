@@ -1,0 +1,84 @@
+# Numerical benchmark families (Section 3.6.4, Appendix A.2, Table A2).
+# Every searchable benchmark follows the protocol of Table A4 (Optuna TPE,
+# 60 trials incl. 12 startup trials, mean validation RMSE over tuning seeds).
+
+Persistence:
+  kind: persistence
+  stochastic: false
+
+ARIMA:
+  kind: arima
+  stochastic: false
+  search_space:
+    p: [0, 1, 2]
+    d: [0, 1]
+    q: [0, 1, 2]
+  # d = 0 -> constant, d = 1 -> linear trend; only converged fits are retained.
+  paper_selected: {Hubei: {p: 2, d: 1, q: 2}, Guangdong: {p: 2, d: 0, q: 1}}
+
+Ridge:
+  kind: ridge
+  stochastic: false
+  search_space:
+    lookback: [10, 30, 60, 90]
+    alpha: [0.01, 0.1, 1.0, 10.0, 100.0]
+  paper_selected: {Hubei: {lookback: 10, alpha: 1.0}, Guangdong: {lookback: 10, alpha: 100.0}}
+
+XGBoost:
+  kind: xgboost
+  stochastic: true
+  fixed: {n_estimators: 200, tree_method: hist, max_bin: 64, subsample: 0.8, colsample_bytree: 0.8, reg_lambda: 1.0}
+  search_space:
+    lookback: [10, 30, 60, 90]
+    max_depth: [2, 4]
+    learning_rate: [0.03, 0.1]
+  paper_selected:
+    Hubei: {lookback: 10, max_depth: 2, learning_rate: 0.03}
+    Guangdong: {lookback: 90, max_depth: 2, learning_rate: 0.03}
+
+# Neural benchmarks share one search domain (Appendix A.2).
+_neural_space: &neural_space
+  lookback: [10, 30, 60, 90]
+  width: [32, 64, 128]
+  lr: [0.0001, 0.0003, 0.001]
+  weight_decay: [0.0, 0.00001, 0.0001]
+  dropout: [0.0, 0.1, 0.2]
+  batch_size: [32, 64]
+
+LSTM:
+  kind: neural
+  arch: lstm
+  stochastic: true
+  search_space: *neural_space
+  paper_selected: {Hubei: {lookback: 30, width: 64}, Guangdong: {lookback: 30, width: 64}}
+
+TCN:
+  kind: neural
+  arch: tcn
+  stochastic: true
+  search_space: *neural_space
+  paper_selected: {Hubei: {lookback: 10, width: 64}, Guangdong: {lookback: 30, width: 64}}
+
+Transformer:
+  kind: neural
+  arch: transformer
+  stochastic: true
+  fixed: {n_heads: 2, ff_dim: 128}
+  search_space: *neural_space
+  paper_selected: {Hubei: {lookback: 90, width: 64}, Guangdong: {lookback: 30, width: 64}}
+
+PatchTST:
+  kind: neural
+  arch: patchtst
+  stochastic: true
+  fixed: {n_heads: 2, ff_dim: 128, patch_len: 8, stride: 4}
+  search_space: *neural_space
+  paper_selected: {Hubei: {lookback: 10, width: 64}, Guangdong: {lookback: 10, width: 64}}
+
+iTransformer:
+  kind: neural
+  arch: itransformer
+  stochastic: true
+  fixed: {n_heads: 2, ff_dim: 128}
+  search_space: *neural_space
+  paper_selected: {Hubei: {lookback: 10, width: 64}, Guangdong: {lookback: 90, width: 64}}

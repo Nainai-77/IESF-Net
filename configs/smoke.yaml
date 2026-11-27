@@ -1,0 +1,37 @@
+# Tiny configuration for the synthetic end-to-end smoke test (NOT a paper setting).
+# Usage:  python scripts/run_pipeline.py --config configs/smoke.yaml --synthetic --mock-encoders
+paths:
+  raw_dir: data_smoke/raw
+  interim_dir: data_smoke/interim
+  processed_dir: data_smoke/processed
+  output_dir: outputs_smoke
+
+markets:
+  __replace__: true             # replace (not merge) the paper markets
+  SynA: {product: SYNA, splits: [170, 50, 50], test_start: null}
+  SynB: {product: SYNB, splits: [150, 40, 40], test_start: null}
+primary_markets: [SynA, SynB]
+secondary_markets: []
+
+decomposition:
+  trials: 8
+  history_cap: 96
+  n_jobs: 1
+
+seeds:
+  tuning: [101]
+  evaluation: [11, 23]
+  designated: 11
+  bootstrap_main: {SynA: 1, SynB: 2}
+  bootstrap_subgroup: {SynA: [3, 4, 5, 6, 7], SynB: [8, 9, 10, 11, 12]}
+
+tuning:
+  n_trials: 3
+  n_startup_trials: 2
+
+optim:
+  max_epochs: 2
+  patience: 2
+
+evaluation:
+  bootstrap_resamples: 50

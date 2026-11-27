@@ -1,0 +1,128 @@
+# =============================================================================
+# IESF-Net — global configuration (paper: "Persistent Institutional Memory and
+# Multiscale Text–Price Fusion for Carbon Allowance Price Forecasting in
+# China's Regional Markets").  Section / table references are to the paper.
+# Relative paths are resolved against the project root (folder of this repo).
+# =============================================================================
+
+paths:
+  raw_dir: data/raw                 # prices/{market}_observed_prices.csv, documents.jsonl, actions.jsonl (optional)
+  interim_dir: data/interim         # cleaned corpus, encoded documents, PII actions, decomposition archive
+  processed_dir: data/processed     # {market}.npz model-ready arrays
+  output_dir: outputs               # forecasts, checkpoints, tuning logs, tables, figures
+
+# --- Markets and chronological target partitions (Table 2) -------------------
+reserve: 90                         # first 90 observations reserved for input construction
+markets:
+  Hubei:     {product: HBEA, splits: [1831, 392, 393], test_start: "2024-05-07"}
+  Guangdong: {product: GDEA, splits: [1763, 380, 393], test_start: "2024-05-21"}
+  Shanghai:  {product: SHEA, splits: [1115, 256, 342], test_start: "2023-10-10"}
+  Shenzhen:  {product: SZEA, splits: [365, 84, 112],   test_start: "2025-05-08"}
+primary_markets: [Hubei, Guangdong]
+secondary_markets: [Shanghai, Shenzhen]
+
+# --- Information-set alignment (Section 3.6.2) -------------------------------
+alignment:
+  timezone: "+08:00"
+  market_cutoff: "15:00"            # a document enters at the first market cut-off on or after release
+  date_only_time: "23:59:59.999999" # date-only releases are assigned to the end of the recorded day
+  pre_calendar_days: 1              # semantic/CSI: drop documents released > 1 day before the first observation
+                                    # (null keeps them, piled on observation 0); PII actions are never dropped
+
+# --- Text encoders (Section 3.2.1) ---------------------------------------------
+text:
+  semantic_model: google-bert/bert-base-chinese
+  semantic_revision: 8f23c25b06e129b6c986331a13d8d025a92cf0ea
+  sentiment_model: yiyanghkust/finbert-tone-chinese
+  sentiment_revision: e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d
+  sentiment_labels: {neutral: 0, positive: 1, negative: 2}
+  max_content_tokens: 510           # non-overlapping blocks of at most 510 content tokens
+  batch_size: 16
+  device: auto
+  lexical:                          # "Lexical content" representation of Table 12
+    analyzer: char
+    ngram_range: [1, 2]
+    max_features: 50000
+    min_df: 3
+    svd_dim: 128
+    seed: 2026
+
+# --- Institutional actions / PII (Section 3.2.2, Tables 1 and 4) ----------------
+pii:
+  categories: [Allocation, Compliance, Offsets, Coverage, Trading, MRV, Finance]
+  mechanisms: [increase, decrease, reschedule, unspecified]
+  scopes: [local, national, cross_market]
+  issuer_tiers: [regulator, exchange, other]
+  delta_unit: observation           # elapsed interval Δt between consecutive observations (decay clock)
+  age_unit: day                     # event age (pre-reset) fed to the category GRU: "day" or "observation"
+  audit_per_type: 10                # Section 3.6.3: ten documents per candidate type (nine types)
+  audit_seed: 2026
+
+# --- Causal CEEMDAN and frequency grouping (Section 3.3, Table A1) --------------
+decomposition:
+  trials: 100
+  epsilon: 0.01
+  noise_scale: 1.0
+  noise_kind: normal
+  beta_progress: true
+  range_thr: 0.001
+  total_power_thr: 0.01
+  max_imf: 6
+  history_cap: 256
+  seed_base: 2026                   # noise seed = 2026 + zero-based forecast-origin index
+  min_prefix: 12                    # shorter prefixes are kept as pure trend (implementation guard)
+  emd:
+    spline_kind: cubic
+    extrema_detection: simple
+    nbsym: 2
+    MAX_ITERATION: 1000
+    std_thr: 0.2
+    svar_thr: 0.001
+    energy_ratio_thr: 0.2
+    range_thr: 0.001
+    total_power_thr: 0.005
+    FIXE: 0
+    FIXE_H: 0
+  grouping:
+    k: 4
+    n_init: 20
+    max_iter: 300
+    seed: 2026
+  n_jobs: -1
+
+# --- Seeds (Appendix A.3) ----------------------------------------------------------
+seeds:
+  tuning: [101, 211, 307]
+  evaluation: [11, 23, 37, 53, 71]
+  designated: 11                    # seed whose forecast series enters the date-paired comparisons
+  sampler: 4401
+  bootstrap_main: {Hubei: 20271001, Guangdong: 20271101, Shanghai: 20271201, Shenzhen: 20271301}
+  # five subgroup analyses of Table 11: [full, first half, second half, large changes, small changes]
+  bootstrap_subgroup:
+    Hubei: [20271003, 20271004, 20271005, 20271006, 20271007]
+    Guangdong: [20271103, 20271104, 20271105, 20271106, 20271107]
+
+# --- Optuna TPE (Appendix A.3) -------------------------------------------------------
+tuning:
+  n_trials: 60
+  n_startup_trials: 12
+  n_ei_candidates: 24
+  tie_tolerance: 1.0e-6
+
+# --- Optimisation shared by neural models (Appendix A.2 / Table A3) ---------------------
+optim:
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  max_epochs: 200
+  patience: 20
+  clip_norm: 1.0
+  min_delta: 1.0e-6
+  device: auto
+  eval_batch_size: 256
+
+# --- Evaluation (Section 3.6.6, Appendix B) -----------------------------------------------
+evaluation:
+  bootstrap_resamples: 1000
+  bootstrap_block: 8
+  rolling_window: 21
+  large_change_quantile: 0.75

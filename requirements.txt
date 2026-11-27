@@ -1,0 +1,19 @@
+# Versions stated in the manuscript are pinned; the others are the versions the code was tested with
+# (Python 3.12.7).  EMD-signal provides PyEMD (improved CEEMDAN).
+EMD-signal==1.9.0
+optuna==4.5.0
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.13.1
+scikit-learn==1.5.1
+statsmodels==0.14.2
+torch==2.6.0
+transformers==4.51.0
+xgboost==3.3.0
+joblib==1.4.2
+matplotlib==3.9.2
+pyyaml==6.0.1
+pytest>=7.0
+
+# Explicit direct dependency used by decomposition and audit code.
+tqdm
